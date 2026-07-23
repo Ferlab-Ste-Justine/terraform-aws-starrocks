@@ -44,7 +44,7 @@ module "fe_cloudinit" {
 }
 
 module "cn_cloudinit" {
-  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.52.2"
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.54.1"
   for_each = local.cn_nodes
 
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
