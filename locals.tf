@@ -26,7 +26,7 @@ locals {
 
   starrocks_node_tar_urls = {
     for k, n in merge(local.fe_nodes, local.cn_nodes) :
-    k => "${var.starrocks.download_base_url}/StarRocks-${n.release}-arm64.tar.gz"
+    k => "${var.starrocks.download_base_url}/StarRocks-${n.release}-${var.starrocks.arch}.tar.gz"
   }
 
   fe_fqdns = {
@@ -46,10 +46,10 @@ locals {
 
   dependencies = {
     packages = {
-      common   = ["java-17-amazon-corretto-devel", "jq"]
+      common   = ["java-17-amazon-corretto-devel"]
       frontend = ["mariadb105"]
     }
-    java_home = "/usr/lib/jvm/java-17-amazon-corretto.aarch64"
+    java_home = "/usr/lib/jvm/java-17-amazon-corretto.${var.starrocks.arch == "arm64" ? "aarch64" : "x86_64"}"
   }
 
   shared_data = {

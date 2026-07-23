@@ -66,10 +66,11 @@ variable "compute_nodes" {
 }
 
 variable "starrocks" {
-  description = "StarRocks default release and binary download source."
+  description = "StarRocks default release, binary download source, and node CPU architecture."
   type = object({
     default_release   = string
     download_base_url = string
+    arch              = optional(string, "arm64")
   })
 }
 
