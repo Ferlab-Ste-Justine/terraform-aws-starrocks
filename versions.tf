@@ -4,15 +4,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.46.0"
+      version = "~> 6.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.8.1"
+      version = "~> 3.0"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.2.1"
+      version = "~> 4.0"
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"

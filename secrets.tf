@@ -1,6 +1,5 @@
 resource "tls_private_key" "starrocks" {
-  algorithm   = "ED25519"
-  ecdsa_curve = "P384"
+  algorithm = "ED25519"
 }
 
 resource "aws_key_pair" "starrocks" {

@@ -32,7 +32,6 @@ variable "name_prefix" {
 variable "cluster_suffix" {
   description = "Suffix distinguishing parallel cluster generations."
   type        = string
-  default     = "v2"
 }
 
 variable "network" {
@@ -53,6 +52,11 @@ variable "frontends" {
     root_gb       = optional(number, 30)
     meta_gb       = optional(number, 50)
   }))
+
+  validation {
+    condition     = alltrue([for k in keys(var.frontends) : can(regex("^[a-z]+-[0-9]+$", k))])
+    error_message = "Frontend node keys must look like fe-1, fe-2 (letters, dash, trailing number)."
+  }
 }
 
 variable "compute_nodes" {
@@ -63,6 +67,11 @@ variable "compute_nodes" {
     root_gb       = optional(number, 30)
     mem_limit     = optional(string, "80%")
   }))
+
+  validation {
+    condition     = alltrue([for k in keys(var.compute_nodes) : can(regex("^[a-z]+-[0-9]+$", k))])
+    error_message = "Compute node keys must look like cn-1, cn-2 (letters, dash, trailing number)."
+  }
 }
 
 variable "starrocks" {
