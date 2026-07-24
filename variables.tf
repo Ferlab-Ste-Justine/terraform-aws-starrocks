@@ -1,5 +1,5 @@
 variable "environment" {
-  description = "Deployment environment, used in resource and secret names."
+  description = "Deployment environment, used in resource names."
   type        = string
 }
 
@@ -8,18 +8,8 @@ variable "region" {
   type        = string
 }
 
-variable "account_id" {
-  description = "AWS account id, used to name the shared-data bucket."
-  type        = string
-}
-
 variable "ami_id" {
   description = "AMI id (arm64 Amazon Linux 2023) used for all cluster nodes."
-  type        = string
-}
-
-variable "domain_name" {
-  description = "Base domain used for the cluster server certificate SAN."
   type        = string
 }
 
@@ -35,11 +25,61 @@ variable "cluster_suffix" {
 }
 
 variable "network" {
-  description = "VPC and subnet placement for the cluster nodes and NLB."
+  description = "VPC CIDR and subnet placement for the cluster nodes."
   type = object({
-    vpc_id     = string
     vpc_cidr   = string
     subnet_ids = list(string)
+  })
+}
+
+variable "security_group_id" {
+  description = "Security group attached to every node network interface."
+  type        = string
+}
+
+variable "iam_instance_profile" {
+  description = "IAM instance profile name assumed by every node."
+  type        = string
+}
+
+variable "key_pair_name" {
+  description = "EC2 key pair name granting SSH access to the nodes."
+  type        = string
+}
+
+variable "target_group_arn" {
+  description = "ARN of the FE query target group the frontends register into."
+  type        = string
+}
+
+variable "fe_meta_volume_ids" {
+  description = "EBS volume ids for the FE metadata disks, keyed by frontend node id."
+  type        = map(string)
+}
+
+variable "ssl" {
+  description = "TLS server material used by the FE for its secure query endpoint."
+  type = object({
+    cert              = string
+    key               = string
+    keystore_password = string
+  })
+  sensitive = true
+}
+
+variable "secrets" {
+  description = "Names of the Secrets Manager secrets the nodes read at boot."
+  type = object({
+    root_name = string
+  })
+}
+
+variable "s3_shared_data" {
+  description = "Shared-data S3 storage backing the cluster."
+  type = object({
+    bucket = string
+    prefix = string
+    region = string
   })
 }
 
@@ -90,12 +130,4 @@ variable "ranger" {
     sync_username = string
     sync_password = string
   })
-}
-
-variable "iam" {
-  description = "Extra IAM policy ARNs attached to the node role, keyed by a stable name."
-  type = object({
-    additional_policies = optional(map(string), {})
-  })
-  default = {}
 }

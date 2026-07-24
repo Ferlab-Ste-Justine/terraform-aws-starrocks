@@ -1,29 +1,54 @@
 # terraform-aws-starrocks
 
-Cluster-level StarRocks deployment on AWS EC2: frontends (FE) and compute nodes (CN),
-internal NLB, node IAM role, shared-data S3 bucket, TLS material and Secrets Manager
-secrets. The module composes the shared cloud-init template
+Compute layer of a StarRocks cluster on AWS EC2: frontend (FE) and compute (CN) nodes,
+their network interfaces, FE metadata volume attachments, FE target-group registrations and
+per-node cloud-init. The module composes the shared cloud-init template
 `terraform-cloudinit-templates//starrocks` and renders one independent config per node.
 
-The orchestration (VPC, subnets, AMI, caller identity, datalake/nextflow IAM policies)
-stays in the caller; the module receives them as inputs.
+The persistent and shared resources live in the caller and are passed in by identifier: the
+security group, IAM instance profile, key pair, NLB target group, shared-data S3 bucket, FE
+metadata EBS volumes, TLS server material and the Secrets Manager secrets. This is the same
+split the libvirt platforms use (volumes, networking and security groups declared by the
+orchestration, connected to the compute module by id).
 
 ## Usage
 
 ```hcl
 module "starrocks" {
-  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-aws-starrocks.git//?ref=v0.1.5"
+  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-aws-starrocks.git//?ref=v0.2.0"
 
-  environment = "qa"
-  region      = "ca-central-1"
-  account_id  = data.aws_caller_identity.current.account_id
-  ami_id      = "ami-0ad01c5e1e4a286e5"
-  domain_name = "dev.qlin.aws.sante.quebec"
+  environment    = "qa"
+  region         = "ca-central-1"
+  ami_id         = "ami-0ad01c5e1e4a286e5"
+  name_prefix    = "starrocks"
+  cluster_suffix = "v2"
 
   network = {
     vpc_id     = data.aws_vpc.qlin_qa.id
     vpc_cidr   = data.aws_vpc.qlin_qa.cidr_block
     subnet_ids = data.aws_subnets.workload_az.ids
+  }
+
+  security_group_id    = aws_security_group.node.id
+  iam_instance_profile = aws_iam_instance_profile.node.name
+  key_pair_name        = aws_key_pair.starrocks.key_name
+  target_group_arn     = aws_lb_target_group.fe_query.arn
+  fe_meta_volume_ids   = { for k, v in aws_ebs_volume.fe_meta : k => v.id }
+
+  ssl = {
+    cert              = tls_locally_signed_cert.starrocks_ssl_server.cert_pem
+    key               = tls_private_key.starrocks_ssl_server.private_key_pem
+    keystore_password = random_password.starrocks_ssl_keystore.result
+  }
+
+  secrets = {
+    root_name = aws_secretsmanager_secret.starrocks_root.name
+  }
+
+  s3_shared_data = {
+    bucket = aws_s3_bucket.starrocks.id
+    prefix = "v2"
+    region = "ca-central-1"
   }
 
   frontends = {
@@ -49,13 +74,6 @@ module "starrocks" {
     sync_username = "rangerusersync"
     sync_password = data.aws_secretsmanager_secret_version.ranger_sync.secret_string
   }
-
-  iam = {
-    additional_policies = {
-      iceberg_datalake = aws_iam_policy.iceberg_datalake.arn
-      nextflow_output  = aws_iam_policy.nextflow_output.arn
-    }
-  }
 }
 ```
 
@@ -69,12 +87,7 @@ is what enables a one-node-at-a-time rollout:
 - Upgrade one node: set its `release`, e.g. `"fe-2" = { release = "4.0.11" }`. The tarball URL
   change drives a `replace_triggered_by` recreation of that node only.
 - Move the leader: set `leader = true` on the target FE (exactly one FE must be leader).
-- Resize a node: edit its `instance_type` (or `root_gb` / `meta_gb` / `mem_limit`).
+- Resize a node: edit its `instance_type` (or `root_gb` / `mem_limit`). FE metadata volume size
+  (`meta_gb`) is owned by the caller.
 
 `release` left unset falls back to `starrocks.default_release`.
-
-## Open items
-
-- CN nodes render cloud-init from `//starrocks?ref=v0.52.2` while FE uses `v0.54.1`. Align CN
-  to v0.54.1 once its rendered output is validated (changing the ref changes the boot config,
-  so it is a per-node reprovision, not an in-place edit).

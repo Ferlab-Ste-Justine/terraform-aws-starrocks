@@ -55,21 +55,19 @@ locals {
   shared_data = {
     enabled              = true
     storage_type         = "S3"
-    s3_endpoint          = "https://s3.${var.region}.amazonaws.com"
-    s3_path              = "${aws_s3_bucket.starrocks.id}/${var.cluster_suffix}"
-    s3_region            = var.region
+    s3_endpoint          = "https://s3.${var.s3_shared_data.region}.amazonaws.com"
+    s3_path              = "${var.s3_shared_data.bucket}/${var.s3_shared_data.prefix}"
+    s3_region            = var.s3_shared_data.region
     use_instance_profile = true
     access_key           = ""
     secret_key           = ""
   }
 
-  ssl_material = jsondecode(aws_secretsmanager_secret_version.starrocks_ssl.secret_string)
-
   ssl = {
     enabled                = true
-    cert                   = local.ssl_material.server_cert
-    key                    = local.ssl_material.server_key
-    keystore_password      = local.ssl_material.keystore_password
+    cert                   = var.ssl.cert
+    key                    = var.ssl.key
+    keystore_password      = var.ssl.keystore_password
     force_secure_transport = true
   }
 

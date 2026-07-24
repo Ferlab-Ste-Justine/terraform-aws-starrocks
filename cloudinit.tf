@@ -5,7 +5,7 @@ module "leader_secrets" {
   shell_sources = [{
     script_path = "/opt/starrocks-secrets.env"
     secrets = [{
-      secret_id     = aws_secretsmanager_secret.starrocks_root.name
+      secret_id     = var.secrets.root_name
       variable_name = "ROOT_PW"
     }]
   }]

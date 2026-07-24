@@ -1,23 +1,8 @@
-resource "aws_ebs_volume" "fe_meta" {
-  for_each = local.fe_nodes
-
-  availability_zone = aws_instance.fe[each.key].availability_zone
-  size              = each.value.meta_gb
-  type              = "gp3"
-  encrypted         = true
-
-  tags = { Name = "${each.value.node_name}-meta" }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
 resource "aws_volume_attachment" "fe_meta" {
   for_each = local.fe_nodes
 
   device_name = "/dev/sdf"
-  volume_id   = aws_ebs_volume.fe_meta[each.key].id
+  volume_id   = var.fe_meta_volume_ids[each.key]
   instance_id = aws_instance.fe[each.key].id
 }
 

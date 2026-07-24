@@ -2,7 +2,7 @@ resource "aws_network_interface" "fe" {
   for_each = local.fe_nodes
 
   subnet_id       = element(var.network.subnet_ids, each.value.index)
-  security_groups = [aws_security_group.node.id]
+  security_groups = [var.security_group_id]
 
   tags = { Name = each.value.node_name }
 }
@@ -11,7 +11,7 @@ resource "aws_network_interface" "cn" {
   for_each = local.cn_nodes
 
   subnet_id       = element(var.network.subnet_ids, each.value.index)
-  security_groups = [aws_security_group.node.id]
+  security_groups = [var.security_group_id]
 
   tags = { Name = each.value.node_name }
 }
@@ -21,8 +21,8 @@ resource "aws_instance" "fe" {
 
   ami                  = var.ami_id
   instance_type        = each.value.instance_type
-  iam_instance_profile = aws_iam_instance_profile.node.name
-  key_name             = aws_key_pair.starrocks.key_name
+  iam_instance_profile = var.iam_instance_profile
+  key_name             = var.key_pair_name
   user_data            = data.cloudinit_config.fe[each.key].rendered
 
   network_interface {
@@ -58,8 +58,8 @@ resource "aws_instance" "cn" {
 
   ami                  = var.ami_id
   instance_type        = each.value.instance_type
-  iam_instance_profile = aws_iam_instance_profile.node.name
-  key_name             = aws_key_pair.starrocks.key_name
+  iam_instance_profile = var.iam_instance_profile
+  key_name             = var.key_pair_name
   user_data            = data.cloudinit_config.cn[each.key].rendered
 
   network_interface {
@@ -88,4 +88,11 @@ resource "aws_instance" "cn" {
     ignore_changes       = [ami, user_data]
     replace_triggered_by = [terraform_data.cn_replace_trigger[each.key]]
   }
+}
+
+resource "aws_lb_target_group_attachment" "fe_query" {
+  for_each = local.fe_nodes
+
+  target_group_arn = var.target_group_arn
+  target_id        = aws_instance.fe[each.key].id
 }
