@@ -7,14 +7,13 @@ resource "aws_volume_attachment" "fe_meta" {
 }
 
 module "fe_meta_volume" {
-  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//data-volumes?ref=v0.54.1"
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//data-volumes-aws?ref=v0.55.0"
+  for_each = local.fe_nodes
 
   volumes = [{
     label         = "sr-meta"
-    device        = "sdf"
-    filesystem    = "xfs"
+    volume_id     = var.fe_meta_volume_ids[each.key]
     mount_path    = "/opt/starrocks/meta"
-    mount_options = "defaults,noatime"
-    overwrite     = false
+    mount_options = "defaults,noatime,nofail,x-systemd.device-timeout=5"
   }]
 }

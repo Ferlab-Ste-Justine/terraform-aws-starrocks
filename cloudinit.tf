@@ -84,7 +84,7 @@ data "cloudinit_config" "fe" {
 
   part {
     content_type = "text/cloud-config"
-    content      = module.fe_meta_volume.configuration
+    content      = module.fe_meta_volume[each.key].configuration
   }
 
   dynamic "part" {
