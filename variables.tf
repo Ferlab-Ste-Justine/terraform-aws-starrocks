@@ -44,7 +44,7 @@ variable "network" {
 }
 
 variable "frontends" {
-  description = "StarRocks frontend nodes keyed by node id (e.g. fe-1)."
+  description = "StarRocks frontend nodes keyed by node id (e.g. fe-1); set `release` per node to override `starrocks.default_release` for a one-node-at-a-time upgrade."
   type = map(object({
     instance_type = optional(string, "c6g.xlarge")
     release       = optional(string)
@@ -60,7 +60,7 @@ variable "frontends" {
 }
 
 variable "compute_nodes" {
-  description = "StarRocks compute nodes keyed by node id (e.g. cn-1)."
+  description = "StarRocks compute nodes keyed by node id (e.g. cn-1); set `release` per node to override `starrocks.default_release` for a one-node-at-a-time upgrade."
   type = map(object({
     instance_type = optional(string, "r8gd.2xlarge")
     release       = optional(string)
@@ -75,7 +75,7 @@ variable "compute_nodes" {
 }
 
 variable "starrocks" {
-  description = "StarRocks default release, binary download source, and node CPU architecture."
+  description = "Cluster-wide StarRocks defaults: fallback release (overridable per node via `frontends`/`compute_nodes` `release`), binary download source, and node CPU architecture."
   type = object({
     default_release   = string
     download_base_url = string

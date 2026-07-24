@@ -12,7 +12,7 @@ stays in the caller; the module receives them as inputs.
 
 ```hcl
 module "starrocks" {
-  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-aws-starrocks.git//?ref=v0.1.4"
+  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-aws-starrocks.git//?ref=v0.1.5"
 
   environment = "qa"
   region      = "ca-central-1"
