@@ -12,7 +12,7 @@ module "leader_secrets" {
 }
 
 module "fe_cloudinit" {
-  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.54.1"
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.56.0"
   for_each = local.fe_nodes
 
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
@@ -37,6 +37,8 @@ module "fe_cloudinit" {
     ssl             = local.ssl
     iceberg_rest    = { ca_cert = "", env_name = "" }
     meta_dir        = "/opt/starrocks/meta"
+    seed_hosts      = values(local.fe_fqdns)
+    initial_cluster = each.value.initial_cluster
     shared_data     = local.shared_data
     additional_conf = ["enable_udf = true"]
     ranger          = var.ranger
