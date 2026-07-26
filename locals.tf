@@ -2,13 +2,14 @@ locals {
   fe_nodes = {
     for k, v in var.frontends :
     k => {
-      index         = tonumber(regex("[0-9]+$", k)) - 1
-      node_name     = "${var.name_prefix}-${var.environment}-fe-${var.cluster_suffix}-${regex("[0-9]+$", k)}"
-      is_leader     = v.leader
-      instance_type = v.instance_type
-      root_gb       = v.root_gb
-      meta_gb       = v.meta_gb
-      release       = coalesce(v.release, var.starrocks.default_release)
+      index           = tonumber(regex("[0-9]+$", k)) - 1
+      node_name       = "${var.name_prefix}-${var.environment}-fe-${var.cluster_suffix}-${regex("[0-9]+$", k)}"
+      is_leader       = v.leader
+      initial_cluster = v.initial_cluster
+      instance_type   = v.instance_type
+      root_gb         = v.root_gb
+      meta_gb         = v.meta_gb
+      release         = coalesce(v.release, var.starrocks.default_release)
     }
   }
 
@@ -92,5 +93,12 @@ check "single_fe_leader" {
   assert {
     condition     = length([for k, n in local.fe_nodes : k if n.is_leader]) == 1
     error_message = "Exactly one frontend must have leader = true (got ${length([for k, n in local.fe_nodes : k if n.is_leader])})."
+  }
+}
+
+check "at_most_one_initial_cluster_fe" {
+  assert {
+    condition     = length([for k, n in local.fe_nodes : k if n.initial_cluster]) <= 1
+    error_message = "At most one frontend may set initial_cluster = true; more would seed multiple clusters (split-brain)."
   }
 }

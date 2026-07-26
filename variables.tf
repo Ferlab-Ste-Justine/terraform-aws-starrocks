@@ -86,11 +86,12 @@ variable "s3_shared_data" {
 variable "frontends" {
   description = "StarRocks frontend nodes keyed by node id (e.g. fe-1); set `release` per node to override `starrocks.default_release` for a one-node-at-a-time upgrade."
   type = map(object({
-    instance_type = optional(string, "c6g.xlarge")
-    release       = optional(string)
-    leader        = optional(bool, false)
-    root_gb       = optional(number, 30)
-    meta_gb       = optional(number, 50)
+    instance_type   = optional(string, "c6g.xlarge")
+    release         = optional(string)
+    leader          = optional(bool, false)
+    initial_cluster = optional(bool, false)
+    root_gb         = optional(number, 30)
+    meta_gb         = optional(number, 50)
   }))
 
   validation {
