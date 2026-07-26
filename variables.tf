@@ -84,12 +84,13 @@ variable "s3_shared_data" {
 }
 
 variable "frontends" {
-  description = "StarRocks frontend nodes keyed by node id (e.g. fe-1); set `release` per node to override `starrocks.default_release` for a one-node-at-a-time upgrade."
+  description = "StarRocks frontend nodes keyed by node id (e.g. fe-1); set `release` per node for a one-node-at-a-time upgrade, or bump `generation` to reprovision a node whose change lives only in user_data."
   type = map(object({
     instance_type   = optional(string, "c6g.xlarge")
     release         = optional(string)
     leader          = optional(bool, false)
     initial_cluster = optional(bool, false)
+    generation      = optional(number, 0)
     root_gb         = optional(number, 30)
     meta_gb         = optional(number, 50)
   }))
@@ -101,10 +102,11 @@ variable "frontends" {
 }
 
 variable "compute_nodes" {
-  description = "StarRocks compute nodes keyed by node id (e.g. cn-1); set `release` per node to override `starrocks.default_release` for a one-node-at-a-time upgrade."
+  description = "StarRocks compute nodes keyed by node id (e.g. cn-1); set `release` per node for a one-node-at-a-time upgrade, or bump `generation` to reprovision a node whose change lives only in user_data."
   type = map(object({
     instance_type = optional(string, "r8gd.2xlarge")
     release       = optional(string)
+    generation    = optional(number, 0)
     root_gb       = optional(number, 30)
     mem_limit     = optional(string, "80%")
   }))

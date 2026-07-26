@@ -86,8 +86,17 @@ is what enables a one-node-at-a-time rollout:
 
 - Upgrade one node: set its `release`, e.g. `"fe-2" = { release = "4.0.11" }`. The tarball URL
   change drives a `replace_triggered_by` recreation of that node only.
+- Reprovision one node without a version change: bump its `generation`, e.g.
+  `"fe-2" = { release = "4.0.11", generation = 1 }`. Use this to roll a change that lives only in
+  the node's user_data (mount logic, boot guard, config) — those are masked by
+  `ignore_changes = [user_data]`, so a version-less `release` edit alone would not recreate anything.
 - Move the leader: set `leader = true` on the target FE (exactly one FE must be leader).
 - Resize a node: edit its `instance_type` (or `root_gb` / `mem_limit`). FE metadata volume size
   (`meta_gb`) is owned by the caller.
 
 `release` left unset falls back to `starrocks.default_release`.
+
+`generation` is a monotonic counter: only ever increase it, one node at a time. It defaults to `0`,
+which produces the exact same replace trigger as omitting it — so adding the field to an existing
+cluster is a no-op. Never decrement or reset a bumped `generation` back to `0`: that changes the
+trigger back and reprovisions the node unexpectedly. The value is sticky by design.
