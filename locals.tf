@@ -6,6 +6,7 @@ locals {
       node_name       = "${var.name_prefix}-${var.environment}-fe-${var.cluster_suffix}-${regex("[0-9]+$", k)}"
       is_leader       = v.leader
       initial_cluster = v.initial_cluster
+      generation      = v.generation
       instance_type   = v.instance_type
       root_gb         = v.root_gb
       meta_gb         = v.meta_gb
@@ -19,6 +20,7 @@ locals {
       index         = tonumber(regex("[0-9]+$", k)) - 1
       node_name     = "${var.name_prefix}-${var.environment}-cn-${var.cluster_suffix}-${regex("[0-9]+$", k)}"
       instance_type = v.instance_type
+      generation    = v.generation
       root_gb       = v.root_gb
       mem_limit     = v.mem_limit
       release       = coalesce(v.release, var.starrocks.default_release)
