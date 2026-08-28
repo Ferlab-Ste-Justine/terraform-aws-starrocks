@@ -1,5 +1,5 @@
 module "leader_secrets" {
-  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//aws-secret-manager?ref=v0.52.2"
+  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//aws-secret-manager?ref=v0.57.0"
 
   region = var.region
   shell_sources = [{
@@ -12,7 +12,7 @@ module "leader_secrets" {
 }
 
 module "fe_cloudinit" {
-  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.56.0"
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.57.0"
   for_each = local.fe_nodes
 
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
@@ -45,8 +45,34 @@ module "fe_cloudinit" {
   }
 }
 
+module "fe_security_reverse_proxy_cloudinit" {
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//http-security-reverse-proxy?ref=v0.57.0"
+  cpu_architecture = var.starrocks.arch
+  reverse_proxy    = {
+    server_name = "starrocks-security-reverse-proxy"
+    ip = "0.0.0.0"
+    port = var.security_reverse_proxy.port
+    max_connections = 100
+    user = {
+      create = false
+      name   = "starrocks"
+    }
+    tls = {
+      server_cert = var.ssl.cert
+      server_key = var.ssl.key
+    }
+    backends = [{
+      port = 8030
+      path_mappings = [{
+        backend_path = "/metrics"
+        frontend_path = "/metrics"
+      }]
+    }]
+  }
+}
+
 module "cn_cloudinit" {
-  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.54.1"
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.57.0"
   for_each = local.cn_nodes
 
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
@@ -78,6 +104,32 @@ module "cn_cloudinit" {
   }
 }
 
+module "cn_security_reverse_proxy_cloudinit" {
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//http-security-reverse-proxy?ref=v0.57.0"
+  cpu_architecture = var.starrocks.arch
+  reverse_proxy    = {
+    server_name = "starrocks-security-reverse-proxy"
+    ip = "0.0.0.0"
+    port = var.security_reverse_proxy.port
+    max_connections = 100
+    user = {
+      create = false
+      name   = "starrocks"
+    }
+    tls = {
+      server_cert = var.ssl.cert
+      server_key = var.ssl.key
+    }
+    backends = [{
+      port = 8040
+      path_mappings = [{
+        backend_path = "/metrics"
+        frontend_path = "/metrics"
+      }]
+    }]
+  }
+}
+
 data "cloudinit_config" "fe" {
   for_each = local.fe_nodes
 
@@ -91,6 +143,14 @@ data "cloudinit_config" "fe" {
 
   dynamic "part" {
     for_each = each.value.is_leader ? [module.leader_secrets.configuration] : []
+    content {
+      content_type = "text/cloud-config"
+      content      = part.value
+    }
+  }
+
+  dynamic "part" {
+    for_each = var.security_reverse_proxy.expose_metrics ? [module.fe_security_reverse_proxy_cloudinit.configuration] : []
     content {
       content_type = "text/cloud-config"
       content      = part.value
@@ -112,6 +172,14 @@ data "cloudinit_config" "cn" {
   part {
     content_type = "text/cloud-config"
     content      = local.cn_instance_store_mount
+  }
+
+  dynamic "part" {
+    for_each = var.security_reverse_proxy.expose_metrics ? [module.cn_security_reverse_proxy_cloudinit.configuration] : []
+    content {
+      content_type = "text/cloud-config"
+      content      = part.value
+    }
   }
 
   part {
