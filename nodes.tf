@@ -3,6 +3,7 @@ resource "aws_network_interface" "fe" {
 
   subnet_id       = element(var.network.subnet_ids, each.value.index)
   security_groups = [var.security_group_id]
+  private_ips     = each.value.private_ip == null ? null : [each.value.private_ip]
 
   tags = { Name = each.value.node_name }
 }

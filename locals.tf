@@ -10,6 +10,7 @@ locals {
       instance_type   = v.instance_type
       root_gb         = v.root_gb
       meta_gb         = v.meta_gb
+      private_ip      = v.private_ip
       release         = coalesce(v.release, var.starrocks.default_release)
     }
   }

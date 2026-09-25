@@ -84,7 +84,7 @@ variable "s3_shared_data" {
 }
 
 variable "frontends" {
-  description = "StarRocks frontend nodes keyed by node id (e.g. fe-1); set `release` per node for a one-node-at-a-time upgrade, or bump `generation` to reprovision a node whose change lives only in user_data."
+  description = "StarRocks frontend nodes keyed by node id (e.g. fe-1); set `release` per node for a one-node-at-a-time upgrade, bump `generation` to reprovision a node whose change lives only in user_data, and set `private_ip` to pin the address the node's cluster identity derives from."
   type = map(object({
     instance_type   = optional(string, "c6g.xlarge")
     release         = optional(string)
@@ -93,6 +93,7 @@ variable "frontends" {
     generation      = optional(number, 0)
     root_gb         = optional(number, 30)
     meta_gb         = optional(number, 50)
+    private_ip      = optional(string)
   }))
 
   validation {
