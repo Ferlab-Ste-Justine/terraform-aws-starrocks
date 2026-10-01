@@ -24,7 +24,7 @@ resource "aws_instance" "fe" {
   instance_type        = each.value.instance_type
   iam_instance_profile = var.iam_instance_profile
   key_name             = var.key_pair_name
-  user_data            = data.cloudinit_config.fe[each.key].rendered
+  user_data_base64     = data.cloudinit_config.fe[each.key].rendered
 
   network_interface {
     network_interface_id = aws_network_interface.fe[each.key].id
@@ -49,7 +49,7 @@ resource "aws_instance" "fe" {
   }
 
   lifecycle {
-    ignore_changes       = [ami, user_data]
+    ignore_changes       = [ami, user_data, user_data_base64]
     replace_triggered_by = [terraform_data.fe_replace_trigger[each.key]]
   }
 }
@@ -61,7 +61,7 @@ resource "aws_instance" "cn" {
   instance_type        = each.value.instance_type
   iam_instance_profile = var.iam_instance_profile
   key_name             = var.key_pair_name
-  user_data            = data.cloudinit_config.cn[each.key].rendered
+  user_data_base64     = data.cloudinit_config.cn[each.key].rendered
 
   network_interface {
     network_interface_id = aws_network_interface.cn[each.key].id
@@ -86,7 +86,7 @@ resource "aws_instance" "cn" {
   }
 
   lifecycle {
-    ignore_changes       = [ami, user_data]
+    ignore_changes       = [ami, user_data, user_data_base64]
     replace_triggered_by = [terraform_data.cn_replace_trigger[each.key]]
   }
 }
