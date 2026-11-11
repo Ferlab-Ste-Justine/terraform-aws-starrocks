@@ -146,5 +146,6 @@ variable "ranger" {
     host          = string
     sync_username = string
     sync_password = string
+    ca_cert       = optional(string, "")
   })
 }

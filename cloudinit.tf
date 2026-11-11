@@ -1,5 +1,5 @@
 module "leader_secrets" {
-  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//aws-secret-manager?ref=v0.57.0"
+  source = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//aws-secret-manager?ref=v0.58.0"
 
   region = var.region
   shell_sources = [{
@@ -12,7 +12,7 @@ module "leader_secrets" {
 }
 
 module "fe_cloudinit" {
-  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.57.0"
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.58.0"
   for_each = local.fe_nodes
 
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
@@ -46,7 +46,7 @@ module "fe_cloudinit" {
 }
 
 module "fe_security_reverse_proxy_cloudinit" {
-  source           = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//http-security-reverse-proxy?ref=v0.57.0"
+  source           = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//http-security-reverse-proxy?ref=v0.58.0"
   cpu_architecture = var.starrocks.arch
   reverse_proxy = {
     server_name     = "starrocks-security-reverse-proxy"
@@ -72,7 +72,7 @@ module "fe_security_reverse_proxy_cloudinit" {
 }
 
 module "cn_cloudinit" {
-  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.57.0"
+  source   = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//starrocks?ref=v0.58.0"
   for_each = local.cn_nodes
 
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
@@ -105,7 +105,7 @@ module "cn_cloudinit" {
 }
 
 module "cn_security_reverse_proxy_cloudinit" {
-  source           = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//http-security-reverse-proxy?ref=v0.57.0"
+  source           = "git::https://github.com/Ferlab-Ste-Justine/terraform-cloudinit-templates.git//http-security-reverse-proxy?ref=v0.58.0"
   cpu_architecture = var.starrocks.arch
   reverse_proxy = {
     server_name     = "starrocks-security-reverse-proxy"
