@@ -4,7 +4,7 @@ locals {
     k => {
       index           = tonumber(regex("[0-9]+$", k)) - 1
       node_name       = "${var.name_prefix}-${var.environment}-fe-${var.cluster_suffix}-${regex("[0-9]+$", k)}"
-      is_leader       = v.leader
+      is_leader       = (k == var.leader_key)
       initial_cluster = v.initial_cluster
       generation      = v.generation
       instance_type   = v.instance_type
@@ -33,21 +33,10 @@ locals {
     k => "${var.starrocks.download_base_url}/StarRocks-${n.release}-${var.starrocks.arch}.tar.gz"
   }
 
-  fe_fqdns = {
-    for k, n in local.fe_nodes :
-    k => "ip-${replace(aws_network_interface.fe[k].private_ip, ".", "-")}.${var.region}.compute.internal"
-  }
-
-  cn_fqdns_map = {
-    for k, n in local.cn_nodes :
-    k => "ip-${replace(aws_network_interface.cn[k].private_ip, ".", "-")}.${var.region}.compute.internal"
-  }
-
-  leader_key        = one([for k, n in local.fe_nodes : k if n.is_leader])
-  leader_fqdn       = local.fe_fqdns[local.leader_key]
-  fe_follower_fqdns = [for k, n in local.fe_nodes : local.fe_fqdns[k] if !n.is_leader]
-  cn_fqdns          = [for k in keys(local.cn_nodes) : local.cn_fqdns_map[k]]
-
+  leader_fqdn       = var.fe_fqdns[var.leader_key]
+  fe_follower_fqdns = [for k, v in var.fe_fqdns : v if k != var.leader_key]
+  cn_fqdns          = values(var.cn_fqdns)
+  
   dependencies = {
     packages = {
       common   = ["java-17-amazon-corretto-devel"]
@@ -90,18 +79,4 @@ bootcmd:
       findmnt /opt/starrocks/storage >/dev/null 2>&1 || mount "$DEV" /opt/starrocks/storage
     fi
 EOT
-}
-
-check "single_fe_leader" {
-  assert {
-    condition     = length([for k, n in local.fe_nodes : k if n.is_leader]) == 1 || !var.full_cluster_validation
-    error_message = "Exactly one frontend must have leader = true (got ${length([for k, n in local.fe_nodes : k if n.is_leader])})."
-  }
-}
-
-check "at_most_one_initial_cluster_fe" {
-  assert {
-    condition     = length([for k, n in local.fe_nodes : k if n.initial_cluster]) <= 1 || !var.full_cluster_validation
-    error_message = "At most one frontend may set initial_cluster = true; more would seed multiple clusters (split-brain)."
-  }
 }

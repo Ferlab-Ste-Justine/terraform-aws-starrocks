@@ -18,7 +18,7 @@ module "fe_cloudinit" {
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
   timezone             = "America/Montreal"
   node_type            = "fe"
-  hosts_file_patch     = { enabled = true, fqdn = local.fe_fqdns[each.key] }
+  hosts_file_patch     = { enabled = true, fqdn = var.fe_fqdns[each.key] }
   be_storage_root_path = "/opt/starrocks/storage"
 
   fe_config = {
@@ -37,7 +37,7 @@ module "fe_cloudinit" {
     ssl             = local.ssl
     iceberg_rest    = { ca_cert = "", env_name = "" }
     meta_dir        = "/opt/starrocks/meta"
-    seed_hosts      = values(local.fe_fqdns)
+    seed_hosts      = values(var.fe_fqdns)
     initial_cluster = each.value.initial_cluster
     shared_data     = local.shared_data
     additional_conf = ["enable_udf = true"]
@@ -78,7 +78,7 @@ module "cn_cloudinit" {
   dependencies         = merge(local.dependencies, { starrocks_tar_url = local.starrocks_node_tar_urls[each.key] })
   timezone             = "America/Montreal"
   node_type            = "cn"
-  hosts_file_patch     = { enabled = true, fqdn = local.cn_fqdns_map[each.key] }
+  hosts_file_patch     = { enabled = true, fqdn = var.cn_fqdns[each.key] }
   be_storage_root_path = "/opt/starrocks/storage"
 
   fe_config = {

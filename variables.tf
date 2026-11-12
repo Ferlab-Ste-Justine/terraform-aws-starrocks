@@ -57,12 +57,6 @@ variable "fe_meta_volume_ids" {
   type        = map(string)
 }
 
-variable "full_cluster_validation" {
-  description = "Whether to validate assuming the full cluster is passed to the module. Needs to be disabled when transitioning nodes between module invocations."
-  type        = bool
-  default     = false
-}
-
 variable "ssl" {
   description = "TLS server material used by the FE for its secure query endpoint."
   type = object({
@@ -94,7 +88,6 @@ variable "frontends" {
   type = map(object({
     instance_type   = optional(string, "c6g.xlarge")
     release         = optional(string)
-    leader          = optional(bool, false)
     initial_cluster = optional(bool, false)
     generation      = optional(number, 0)
     root_gb         = optional(number, 30)
@@ -154,4 +147,40 @@ variable "ranger" {
     sync_password = string
     ca_cert       = optional(string, "")
   })
+}
+
+variable "fe_fqdns" {
+  description = "Cluster-wide FE FQDNs keyed by node id, spanning all module invocations."
+  type        = map(string)
+}
+
+check "fe_fqdns_keys_consistant" {
+  assert {
+    condition     = alltrue([for k in keys(var.frontends) : contains(keys(var.fe_fqdns), k)])
+    error_message = "fe_fqdns must include every frontend in this invocation."
+  }
+}
+
+variable "cn_fqdns" {
+  description = "Cluster-wide CN FQDNs keyed by node id, spanning all module invocations."
+  type        = map(string)
+}
+
+check "cn_fqdns_keys_consistant" {
+  assert {
+    condition     = alltrue([for k in keys(var.compute_nodes) : contains(keys(var.cn_fqdns), k)])
+    error_message = "cn_fqdns must include every compute node in this invocation."
+  }
+}
+
+variable "leader_key" {
+  description = "Node id of the cluster-wide FE leader (exactly one across all invocations)."
+  type        = string
+}
+
+check "leader_key_consistant" {
+  assert {
+    condition     = contains(keys(var.fe_fqdns), var.leader_key)
+    error_message = "fe_fqdns must include leader."
+  }
 }
