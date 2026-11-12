@@ -57,6 +57,12 @@ variable "fe_meta_volume_ids" {
   type        = map(string)
 }
 
+variable "full_cluster_validation" {
+  description = "Whether to validate assuming the full cluster is passed to the module. Needs to be disabled when transitioning nodes between module invocations."
+  type        = bool
+  default     = false
+}
+
 variable "ssl" {
   description = "TLS server material used by the FE for its secure query endpoint."
   type = object({
