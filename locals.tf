@@ -94,14 +94,14 @@ EOT
 
 check "single_fe_leader" {
   assert {
-    condition     = length([for k, n in local.fe_nodes : k if n.is_leader]) == 1 || !var.full_cluster_validation
+    condition     = length([for k, n in local.fe_nodes : k if n.is_leader]) == 1
     error_message = "Exactly one frontend must have leader = true (got ${length([for k, n in local.fe_nodes : k if n.is_leader])})."
   }
 }
 
 check "at_most_one_initial_cluster_fe" {
   assert {
-    condition     = length([for k, n in local.fe_nodes : k if n.initial_cluster]) <= 1 || !var.full_cluster_validation
+    condition     = length([for k, n in local.fe_nodes : k if n.initial_cluster]) <= 1
     error_message = "At most one frontend may set initial_cluster = true; more would seed multiple clusters (split-brain)."
   }
 }

@@ -20,7 +20,7 @@ resource "aws_network_interface" "cn" {
 resource "aws_instance" "fe" {
   for_each = local.fe_nodes
 
-  ami                  = var.ami_id
+  ami                  = each.value.ami_id != null ? each.value.ami_id : var.ami_id
   instance_type        = each.value.instance_type
   iam_instance_profile = var.iam_instance_profile
   key_name             = var.key_pair_name
@@ -57,7 +57,7 @@ resource "aws_instance" "fe" {
 resource "aws_instance" "cn" {
   for_each = local.cn_nodes
 
-  ami                  = var.ami_id
+  ami                  = each.value.ami_id != null ? each.value.ami_id : var.ami_id
   instance_type        = each.value.instance_type
   iam_instance_profile = var.iam_instance_profile
   key_name             = var.key_pair_name
