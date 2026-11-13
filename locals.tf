@@ -12,6 +12,7 @@ locals {
       root_gb         = v.root_gb
       meta_gb         = v.meta_gb
       private_ip      = v.private_ip
+      active_in_lb    = v.active_in_lb
       release         = coalesce(v.release, var.starrocks.default_release)
     }
   }

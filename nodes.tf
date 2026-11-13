@@ -92,7 +92,10 @@ resource "aws_instance" "cn" {
 }
 
 resource "aws_lb_target_group_attachment" "fe_query" {
-  for_each = local.fe_nodes
+  for_each = {
+    for k, v in local.fe_nodes : k => v
+    if v.active_in_lb
+  }
 
   target_group_arn = var.target_group_arn
   target_id        = aws_instance.fe[each.key].id
